@@ -10,6 +10,26 @@ scroll=0
 speed=4
 flying=False
 gameover=False
+pipegap=200
+pipe_frequency=3000
+lastPipe=pygame.time.get_ticks()-pipe_frequency
+
+class Pipe(pygame.sprite.Sprite):
+     def __init__(self,x,y,pos):
+          super().__init__()
+          self.image=pygame.image.load("pipe.png")
+          self.rect=self.image.get_rect()
+          if pos=="top":
+               self.image=pygame.transform.flip(self.image,False,True)
+               self.rect.bottomleft=[x,y-pipegap/2]
+          if pos=="bottom":
+               self.rect.topleft=[x,y+pipegap/2]
+     def update(self):
+          self.rect.x-=speed
+          if self.rect.right<0:
+               self.kill()
+
+
 class Bird(pygame.sprite.Sprite):
      def __init__(self):
           pygame.sprite.Sprite.__init__(self)
@@ -42,19 +62,33 @@ class Bird(pygame.sprite.Sprite):
                     if self.index>2:
                          self.index=0
                self.image=self.images[self.index]
-          
+pipe_group=pygame.sprite.Group()
 bird=pygame.sprite.Group()
 flappy=Bird()
 bird.add(flappy)
 while True:
     #canvas.fill("white")
+     #print(pygame.time.get_ticks())
      canvas.blit(bg,(scroll,0))
      canvas.blit(ground,(scroll,H*3/4))
      bird.draw(canvas)
+     pipe_group.draw(canvas)
+
      flappy.update()
      scroll-=speed
      if scroll<-200:
           scroll=0
+     if flying and not gameover:
+          timeNow=pygame.time.get_ticks()
+          if timeNow-lastPipe>3000:
+               pipeHeight=random.randint(-100,100)
+               bpipe=Pipe(W,H/2+pipeHeight,"bottom")
+               tpipe=Pipe(W,H/2+pipeHeight,"top")
+               pipe_group.add(bpipe)
+               pipe_group.add(tpipe)
+               lastPipe=timeNow
+          pipe_group.update()
+
      for i in pygame.event.get():
                if i.type==pygame.QUIT:
                     pygame.quit()
